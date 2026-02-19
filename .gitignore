@@ -1,0 +1,16 @@
+.DS_Store
+/node_modules/
+
+# React Router
+/.react-router/
+/build/
+
+.env
+
+# Tauri
+/src-tauri/target/
+/src-tauri/WixTools
+/src-tauri/gen/
+
+# Bundled ffmpeg/ffprobe binaries (downloaded via scripts/download-ffmpeg.sh)
+/src-tauri/binaries/
