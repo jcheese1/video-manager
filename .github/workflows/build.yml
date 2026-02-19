@@ -46,11 +46,34 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Download ffmpeg/ffprobe for the current target only
+      - name: Download ffmpeg (macOS)
+        if: runner.os == 'macOS'
+        run: |
+          mkdir -p src-tauri/binaries
+          curl -L "https://evermeet.cx/ffmpeg/get/zip" -o /tmp/ffmpeg.zip
+          curl -L "https://evermeet.cx/ffmpeg/get/ffprobe/zip" -o /tmp/ffprobe.zip
+          unzip -o /tmp/ffmpeg.zip -d /tmp/ff
+          unzip -o /tmp/ffprobe.zip -d /tmp/ff
+          cp /tmp/ff/ffmpeg  src-tauri/binaries/ffmpeg-${{ matrix.target }}
+          cp /tmp/ff/ffprobe src-tauri/binaries/ffprobe-${{ matrix.target }}
+          chmod +x src-tauri/binaries/*
+
+      - name: Download ffmpeg (Windows)
+        if: runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path src-tauri/binaries
+          Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "$env:TEMP\ffmpeg-win.zip"
+          Expand-Archive -Path "$env:TEMP\ffmpeg-win.zip" -DestinationPath "$env:TEMP\ffwin" -Force
+          $binDir = Get-ChildItem "$env:TEMP\ffwin" -Directory | Select-Object -First 1
+          Copy-Item "$binDir\bin\ffmpeg.exe"  "src-tauri/binaries/ffmpeg-x86_64-pc-windows-msvc.exe"
+          Copy-Item "$binDir\bin\ffprobe.exe" "src-tauri/binaries/ffprobe-x86_64-pc-windows-msvc.exe"
+
       - name: Build Tauri app
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          # macOS signing (optional — set these secrets if you have a cert)
           APPLE_CERTIFICATE: ${{ secrets.APPLE_CERTIFICATE }}
           APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
           APPLE_SIGNING_IDENTITY: ${{ secrets.APPLE_SIGNING_IDENTITY }}
