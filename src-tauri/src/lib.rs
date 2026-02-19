@@ -85,7 +85,13 @@ async fn detect_silence(
     for line in stderr.lines() {
         if line.contains("silence_start:") {
             if let Some(time_str) = line.split("silence_start:").nth(1) {
-                if let Ok(time) = time_str.trim().split_whitespace().next().unwrap_or("0").parse::<f64>() {
+                if let Ok(time) = time_str
+                    .trim()
+                    .split_whitespace()
+                    .next()
+                    .unwrap_or("0")
+                    .parse::<f64>()
+                {
                     println!("Found silence_start: {}", time);
                 }
             }
@@ -97,7 +103,10 @@ async fn detect_silence(
                         if let Some(duration_part) = parts.get(1) {
                             if let Some(duration_str) = duration_part.split(':').nth(1) {
                                 if let Ok(duration) = duration_str.trim().parse::<f64>() {
-                                    println!("Found silence_end: {}, duration: {}", end_time, duration);
+                                    println!(
+                                        "Found silence_end: {}, duration: {}",
+                                        end_time, duration
+                                    );
                                     silence_periods.push(SilencePeriod {
                                         end: end_time + start,
                                         duration,
@@ -114,18 +123,17 @@ async fn detect_silence(
     println!("Silence periods: {:?}", silence_periods);
 
     // Get total duration from ffprobe
-    let duration_output = app
-        .shell()
-        .sidecar("ffprobe")
-        .ok()
-        .map(|cmd| {
-            cmd.args([
-                "-v", "error",
-                "-show_entries", "format=duration",
-                "-of", "default=noprint_wrappers=1:nokey=1",
-                &file_path,
-            ])
-        });
+    let duration_output = app.shell().sidecar("ffprobe").ok().map(|cmd| {
+        cmd.args([
+            "-v",
+            "error",
+            "-show_entries",
+            "format=duration",
+            "-of",
+            "default=noprint_wrappers=1:nokey=1",
+            &file_path,
+        ])
+    });
 
     let total_duration = if let Some(cmd) = duration_output {
         cmd.output()
@@ -155,20 +163,33 @@ async fn detect_silence(
     let mut clips = Vec::new();
 
     let add_clip = |clips: &mut Vec<DetectedClip>, clip_start: f64, clip_end: f64, pad: bool| {
-        let final_end = if pad { clip_end + END_PADDING } else { clip_end };
-        let final_end = if total_duration > 0.0 { final_end.min(total_duration) } else { final_end };
+        let final_end = if pad {
+            clip_end + END_PADDING
+        } else {
+            clip_end
+        };
+        let final_end = if total_duration > 0.0 {
+            final_end.min(total_duration)
+        } else {
+            final_end
+        };
         let duration = final_end - clip_start;
 
         if duration >= MINIMUM_CLIP_LENGTH && clip_start < final_end {
-            println!("Creating clip: {:.2} -> {:.2} (duration: {:.1}s)", clip_start, final_end, duration);
+            println!(
+                "Creating clip: {:.2} -> {:.2} (duration: {:.1}s)",
+                clip_start, final_end, duration
+            );
             clips.push(DetectedClip {
                 input_video: file_path.clone(),
                 start_time: clip_start,
                 end_time: final_end,
             });
         } else {
-            println!("Skipping short clip: {:.2} -> {:.2} ({:.1}s < {:.1}s)",
-                     clip_start, final_end, duration, MINIMUM_CLIP_LENGTH);
+            println!(
+                "Skipping short clip: {:.2} -> {:.2} ({:.1}s < {:.1}s)",
+                clip_start, final_end, duration, MINIMUM_CLIP_LENGTH
+            );
         }
     };
 
@@ -236,14 +257,22 @@ async fn export_video_clips(
             .shell()
             .sidecar("ffmpeg")?
             .args([
-                "-ss", &clip.start_time.to_string(),
-                "-t", &duration.to_string(),
-                "-i", &clip.input_video,
-                "-c:v", "libx264",
-                "-preset", "fast",
-                "-crf", "23",
-                "-c:a", "aac",
-                "-b:a", "192k",
+                "-ss",
+                &clip.start_time.to_string(),
+                "-t",
+                &duration.to_string(),
+                "-i",
+                &clip.input_video,
+                "-c:v",
+                "libx264",
+                "-preset",
+                "fast",
+                "-crf",
+                "23",
+                "-c:a",
+                "aac",
+                "-b:a",
+                "192k",
                 "-y",
                 &temp_file,
             ])
@@ -281,10 +310,14 @@ async fn export_video_clips(
         .shell()
         .sidecar("ffmpeg")?
         .args([
-            "-f", "concat",
-            "-safe", "0",
-            "-i", &concat_file,
-            "-c", "copy",
+            "-f",
+            "concat",
+            "-safe",
+            "0",
+            "-i",
+            &concat_file,
+            "-c",
+            "copy",
             "-y",
             &output_path,
         ])
@@ -311,13 +344,15 @@ async fn export_video_clips(
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(
             tauri_plugin_sql::Builder::default()
                 .add_migrations(
-                    "sqlite:course-video-manager.db",
+                    "sqlite:cvm.db",
                     vec![
                         tauri_plugin_sql::Migration {
                             version: 1,
@@ -328,23 +363,24 @@ pub fn run() {
                         tauri_plugin_sql::Migration {
                             version: 2,
                             description: "add video file_path and clip archived flag",
-                            sql: include_str!("../migrations/002_add_video_filepath_and_clip_archived.sql"),
+                            sql: include_str!(
+                                "../migrations/002_add_video_filepath_and_clip_archived.sql"
+                            ),
                             kind: tauri_plugin_sql::MigrationKind::Up,
                         },
                         tauri_plugin_sql::Migration {
                             version: 3,
                             description: "restructure to recordings/takes/clips",
-                            sql: include_str!("../migrations/003_restructure_recordings_takes_clips.sql"),
+                            sql: include_str!(
+                                "../migrations/003_restructure_recordings_takes_clips.sql"
+                            ),
                             kind: tauri_plugin_sql::MigrationKind::Up,
                         },
                     ],
                 )
                 .build(),
         )
-        .invoke_handler(tauri::generate_handler![
-            detect_silence,
-            export_video_clips,
-        ])
+        .invoke_handler(tauri::generate_handler![detect_silence, export_video_clips,])
         .setup(|app| {
             // Warm up ffmpeg/ffprobe sidecars in background.
             // First invocation on macOS is slow due to Gatekeeper scan

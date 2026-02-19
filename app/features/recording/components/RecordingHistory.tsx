@@ -80,6 +80,7 @@ export function RecordingHistory({ recordings }: RecordingHistoryProps) {
               autoFocus
               placeholder="Name..."
               name="name"
+              required
               className="h-7 text-xs bg-input border-border"
               onKeyDown={(e) => {
                 if (e.key === "Escape") {

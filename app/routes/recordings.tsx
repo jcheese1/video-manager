@@ -22,6 +22,7 @@ import {
   type OBSRecordingState,
 } from "@/features/recording/hooks/use-obs-recording";
 import { useGlobalSettings } from "@/hooks/use-global-settings";
+import { useUpdater } from "@/hooks/use-updater";
 
 import type { Route } from "./+types/recordings";
 
@@ -67,6 +68,7 @@ export default function RecordingsLayout({ loaderData }: Route.ComponentProps) {
   const { recordings } = loaderData;
   const { settings, setSilenceThreshold } = useGlobalSettings();
   const obsRecording = useOBSRecording();
+  useUpdater();
 
   // const handleCreate = useCallback(
   //   async (name: string) => {

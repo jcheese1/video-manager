@@ -4,7 +4,7 @@ let db: Database | null = null;
 
 async function getDb(): Promise<Database> {
   if (!db) {
-    db = await Database.load("sqlite:course-video-manager.db");
+    db = await Database.load("sqlite:cvm.db");
   }
   return db;
 }

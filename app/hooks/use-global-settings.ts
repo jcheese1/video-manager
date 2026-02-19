@@ -7,7 +7,7 @@ interface GlobalSettings {
 
 const STORAGE_KEY = "global-settings";
 const DEFAULTS: GlobalSettings = {
-  silenceThreshold: -50,
+  silenceThreshold: -40,
   obsSetupCompleted: false,
 };
 

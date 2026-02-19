@@ -1,8 +1,8 @@
 {
   "$schema": "./gen/schemas/desktop-schema.json",
-  "productName": "Course Video Manager",
+  "productName": "CVM",
   "version": "0.1.0",
-  "identifier": "com.coursevideomanager.app",
+  "identifier": "com.cvm.app",
   "build": {
     "beforeDevCommand": "npm run dev",
     "devUrl": "http://localhost:5173",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "Course Video Manager",
+        "title": "CVM — Clip Video Manager",
         "width": 1400,
         "height": 900,
         "minWidth": 1400,
@@ -25,12 +25,20 @@
     ],
     "withGlobalTauri": true,
     "security": {
-      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: asset: tauri: http://localhost:* ws://localhost:* http://asset.localhost mediastream:; img-src 'self' data: blob: asset: tauri: http://asset.localhost; media-src 'self' data: blob: asset: tauri: http://asset.localhost mediastream: *; video-src 'self' data: blob: asset: tauri: http://asset.localhost mediastream:; connect-src 'self' ws://localhost:* http://localhost:*",
+      "csp": "default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: asset: tauri: http://localhost:* ws://localhost:* http://asset.localhost mediastream:; img-src 'self' data: blob: asset: tauri: http://asset.localhost; media-src 'self' data: blob: asset: tauri: http://asset.localhost mediastream: *; video-src 'self' data: blob: asset: tauri: http://asset.localhost mediastream:; connect-src 'self' ws://localhost:* http://localhost:* https://github.com https://objects.githubusercontent.com",
       "capabilities": ["default"],
       "assetProtocol": {
         "enable": true,
         "scope": ["**"]
       }
+    }
+  },
+  "plugins": {
+    "updater": {
+      "endpoints": [
+        "https://github.com/jcheese1/video-manager/releases/latest/download/latest.json"
+      ],
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDZDRDVBMkQ2NzZERDBCNzEKUldSeEM5MTIxcUxWYkJSZzFiSkhmN3VFNFliRG1BUG9NMjh1Y0tSYWxzcXRuMTg2Nmt3QjFCaDUK"
     }
   },
   "bundle": {
